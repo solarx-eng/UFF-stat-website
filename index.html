@@ -3887,9 +3887,13 @@ function importAllTimeCSVText(text,msg,sourceLabel){
     if(msg){msg.className='err';msg.textContent='No valid CSV rows found.';msg.style.display='inline';}
     return 0;
   }
-  allTimeRecords=[...(allTimeRecords||[]),...rows];
+  const recKey=r=>[String(r.player||'').toLowerCase().trim(),r.position,r.season].join('|');
+  const incomingKeys=new Set(rows.map(recKey));
+  const kept=(allTimeRecords||[]).filter(r=>!incomingKeys.has(recKey(r)));
+  const replacedCount=(allTimeRecords||[]).length-kept.length;
+  allTimeRecords=[...kept,...rows];
   syncAllTimeRowsToPlayers(rows);
-  if(msg){msg.className='ok';msg.textContent=`Imported ${rows.length} all-time rows${sourceLabel?' from '+sourceLabel:''}.`;msg.style.display='inline';}
+  if(msg){msg.className='ok';msg.textContent=`Imported ${rows.length} all-time rows${sourceLabel?' from '+sourceLabel:''}${replacedCount?` (updated ${replacedCount} existing)`:''}.`;msg.style.display='inline';}
   saveAllTimeRecordsNow();
   setTimeout(()=>{adminTab='alltime';render();},700);
   return rows.length;
